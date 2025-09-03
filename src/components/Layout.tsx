@@ -1,25 +1,29 @@
-import { Outlet, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Outlet } from "react-router-dom";
+import { Participant } from "../dto/entities/Participant";
+import { AuthService } from "../utils/AuthService";
 
 function Layout() {
+
+    const [participant, setParticipant] = useState<Participant|null>(null);
+
+    useEffect(() => {
+		setParticipant(AuthService.getParticipant());
+		 const unsubscribe = AuthService.subscribeParticipant(() => {
+			setParticipant(AuthService.getParticipant());
+		});
+		return unsubscribe;
+    }, []);
+
     return (
         <>
-          <nav>
-            <ul>
-              <li>
-                <Link to="/">Schedules</Link>
-              </li>
-              <li>
-                <Link to="/blogs">Blogs</Link>
-              </li>
-              <li>
-                <Link to="/contact">Contact</Link>
-              </li>
-            </ul>
-          </nav>
-  
-          <Outlet />
+			<div>
+				{participant ? participant.name : '???'}
+			</div>
+
+			<Outlet />
         </>
-      )
+    )
 }
 
 export default Layout

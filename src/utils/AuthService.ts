@@ -1,9 +1,15 @@
+import { Participant } from "../dto/entities/Participant";
 import { RestAuthResponse } from "../dto/response/RestAuthResponse";
 import { RestBuilder } from "./RestBuilder";
 
 export class AuthService {
 
     static tokenValidityLeeway: 1000 = 1000;
+
+    private static authentication: RestAuthResponse | null = null;
+    private static participant: Participant | null = null;
+    private static invitationToken: string | null = null;
+    private static participantListeners = new Set<() => void>(); 
 
     static login(): Promise<RestAuthResponse|null> {
         return new Promise((resolve, reject) => {
@@ -36,27 +42,48 @@ export class AuthService {
     }
 
     static getAuthentication(): RestAuthResponse|null {
-        let authenticationString = localStorage.getItem('authentication');
-        if (authenticationString == null) {
+        return this.authentication ?? this.getJsonFromSession<RestAuthResponse>('authentication');
+    }
+
+    static setAuthentication(authentication: RestAuthResponse): void {
+        sessionStorage.setItem('authentication', JSON.stringify(authentication));
+        this.authentication = authentication;
+    }
+
+    static storeInvitationToken(invitationToken: string): void {
+        sessionStorage.setItem('invitation_token', invitationToken);
+        this.invitationToken = invitationToken;
+    }
+
+    static getInvitationToken(): string|null {
+        return this.invitationToken ?? sessionStorage.getItem('invitation_token');
+    }
+
+    static setParticipant(participant: Participant): void {
+        sessionStorage.setItem('participant', JSON.stringify(participant));
+        this.participant = participant;
+        for (const listener of this.participantListeners) listener();
+    }
+
+    static getParticipant(): Participant|null {
+        return this.participant ?? this.getJsonFromSession<Participant>('participant');
+    }
+
+    static subscribeParticipant(listener: () => void): () => void {
+        this.participantListeners.add(listener);
+        return () => this.participantListeners.delete(listener);
+    }
+
+    private static getJsonFromSession<T>(key: string): T|null {
+         let result = sessionStorage.getItem(key);
+        if (result == null) {
             return null;
         }
         try {
-            return JSON.parse(authenticationString) as RestAuthResponse;
+            return JSON.parse(result) as T;
         }
         catch (e) {
             return null;
         }
-    }
-
-    static setAuthentication(authentication: RestAuthResponse): void {
-        localStorage.setItem('authentication', JSON.stringify(authentication));
-    }
-
-    static storeInvitationToken(invitationToken: string): void {
-        localStorage.setItem('invitation_token', invitationToken);
-    }
-
-    static getInvitationToken(): string|null {
-        return localStorage.getItem('invitation_token');
     }
 }

@@ -1,12 +1,13 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import "./../node_modules/bootstrap/dist/css/bootstrap.min.css"
+import "bootstrap/dist/css/bootstrap.min.css"
 
 import './App.css'
 
 import Layout from "./components/Layout";
 import NoPage from "./components/NoPage";
-import Login from "./components/Login";
-import Schedules from "./components/Schedules";
+import ScheduleDays from "./components/ScheduleDays";
+import Proposal from "./components/Proposal";
+import Home from "./components/Home";
 
 function App() {
 
@@ -14,9 +15,10 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Layout />}>
-          <Route index element={<Schedules />} />
-          <Route path="login/:token" element={<Login />} />
-          <Route path="schedules/" element={<Schedules />} />
+          <Route index element={<Home />} />
+          <Route path="/login/:token" element={<Home />} />
+          <Route path="schedule/:scheduleId" element={<ScheduleDays />} />
+          <Route path="schedule/:scheduleId/day/:dayId" element={<Proposal />} />
           <Route path="*" element={<NoPage />} />
         </Route>
       </Routes>
