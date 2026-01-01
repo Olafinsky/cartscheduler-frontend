@@ -6,7 +6,7 @@ import './App.css'
 import Layout from "./components/Layout";
 import NoPage from "./components/NoPage";
 import ScheduleDays from "./components/ScheduleDays";
-import Proposal from "./components/Proposal";
+import ProposalComponent from "./components/ProposalComponent";
 import Home from "./components/Home";
 
 function App() {
@@ -18,7 +18,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="/login/:token" element={<Home />} />
           <Route path="schedule/:scheduleId" element={<ScheduleDays />} />
-          <Route path="schedule/:scheduleId/day/:dayId" element={<Proposal />} />
+          <Route path="schedule/:scheduleId/day/:dayId" element={<ProposalComponent />} />
           <Route path="*" element={<NoPage />} />
         </Route>
       </Routes>

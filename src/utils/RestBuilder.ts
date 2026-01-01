@@ -7,6 +7,7 @@ export class RestBuilder {
     endpoint?: string;
     method?: string;
     authenticated: boolean = true;
+    jsonResponseBody: boolean = true;
 
     private constructor() {};
 
@@ -21,6 +22,12 @@ export class RestBuilder {
 
     nonAuthenticated(): RestBuilder {
         this.authenticated = false;
+
+        return this;
+    }
+
+    nonJsonResponse(): RestBuilder {
+        this.jsonResponseBody = false;
 
         return this;
     }
@@ -59,7 +66,7 @@ export class RestBuilder {
 
         return await new Promise((resolve, reject) => {
             fetch(`${backend_uri}/${this.endpoint}`, payload)
-                .then(response => response.json())
+                .then(response => this.jsonResponseBody ? response.json() : response.blob)
                 .then(
                     response => {
                         resolve(response);
