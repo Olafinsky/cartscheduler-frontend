@@ -1,54 +1,87 @@
-# React + TypeScript + Vite
+# Cart Scheduler — frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend React + TypeScript + Vite komunikujący się z backendem Spring.
 
-Currently, two official plugins are available:
+## Docker Compose
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Projekt używa jednego pliku `compose.yaml` z profilami `dev` i `prod`.
+Backend powinien działać na hoście na porcie `8080`.
 
-## Expanding the ESLint configuration
+### DEV
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+```sh
+docker compose --profile dev up -d --build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Aplikacja będzie dostępna pod `http://localhost:5173`. Kod projektu jest
+zamontowany w kontenerze, a Vite HMR automatycznie odświeża zmiany.
+Polling plików jest włączony jawnie, dzięki czemu obserwowanie zmian działa
+również z bind mountami Docker Desktop na Windowsie.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+```sh
+docker compose --profile dev logs -f
+docker compose --profile dev stop
+docker compose --profile dev start
+docker compose --profile dev down
 ```
+
+Po zmianie konfiguracji Compose lub Dockerfile odtwórz kontener:
+
+```sh
+docker compose --profile dev down
+docker compose --profile dev up -d --build --force-recreate
+```
+
+Po zmianie `package.json` lub `package-lock.json` odtwórz również wolumen
+z zależnościami:
+
+```sh
+docker compose --profile dev down -v
+docker compose --profile dev up -d --build
+```
+
+### PROD
+
+```sh
+docker compose --profile prod up -d --build
+```
+
+Produkcyjny build jest serwowany przez Nginx pod `http://localhost:3000`.
+Kontener używa polityki `restart: unless-stopped`.
+
+```sh
+docker compose --profile prod logs -f
+docker compose --profile prod stop
+docker compose --profile prod start
+docker compose --profile prod down
+```
+
+`stop` zatrzymuje kontener bez usuwania go. `down` usuwa kontener oraz sieć
+Compose, ale pozostawia zbudowany obraz.
+
+Przed przełączeniem profilu zatrzymaj poprzednie środowisko, na przykład:
+
+```sh
+docker compose --profile dev down
+docker compose --profile prod up -d --build
+```
+
+## Uruchomienie lokalne bez Dockera
+
+```sh
+npm ci
+npm run dev
+```
+
+Vite przekazuje wtedy żądania `/api/*` do `http://127.0.0.1:8080`.
+
+## Konfiguracja backendu
+
+W obu profilach żądania `/api/*` są przekazywane do
+`http://host.docker.internal:8080`. Adres można zmienić w `compose.yaml`:
+
+- DEV: `VITE_BACKEND_URL`,
+- PROD: `BACKEND_URL`.
+
+W profilu produkcyjnym zmiana `BACKEND_URL` nie wymaga ponownego budowania
+obrazu.
