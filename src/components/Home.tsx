@@ -47,7 +47,7 @@ function Home() {
                                     let participants = participantsResponse as Participant[];
                                     if (participants.length == 1) {
                                         AuthService.setParticipant(participants[0]);
-                                        navigate(`/schedule/${scheduleId}`);
+                                        navigate(`/schedule/${loginRespone.scheduleId}`);
                                     }
                                     else if (participants.length > 1) {
                                         setParticipants(participants);
