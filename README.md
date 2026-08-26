@@ -32,8 +32,10 @@ docker compose --profile dev down
 docker compose --profile dev up -d --build --force-recreate
 ```
 
-Po zmianie `package.json` lub `package-lock.json` odtwórz również wolumen
-z zależnościami:
+Przy starcie kontenera skrypt DEV porównuje aktualny `package-lock.json`
+z wersją używaną do instalacji. Po zmianie zależności automatycznie wykona
+`npm ci`, więc nie trzeba ręcznie usuwać wolumenu. W razie potrzeby można
+wymusić jego pełne odtworzenie:
 
 ```sh
 docker compose --profile dev down -v
