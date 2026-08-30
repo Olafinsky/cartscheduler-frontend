@@ -1,0 +1,9 @@
+.proposal-add-button { margin-bottom: 1rem; }
+.proposal-form { max-width: 38rem; margin-bottom: 1.5rem; padding: 1rem; border: 1px solid #dee2e6; border-radius: .5rem; background: #f8f9fa; }
+.proposal-form__row { display: flex; flex-wrap: wrap; gap: 1.5rem; }
+.proposal-form fieldset { display: flex; flex-wrap: wrap; gap: .75rem; margin: 0 0 1rem; }
+.proposal-form legend { width: 100%; margin-bottom: .35rem; font-size: 1rem; font-weight: 600; }
+.proposal-form label { display: flex; align-items: center; gap: .4rem; }
+.proposal-form select { min-width: 5rem; padding: .3rem .5rem; border: 1px solid #adb5bd; border-radius: .25rem; background: white; }
+.proposal-form__break-toggle { margin-bottom: 1rem; }
+.proposal-form__actions { display: flex; gap: .5rem; }
