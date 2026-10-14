@@ -17,15 +17,8 @@ export class ProposalService {
         });
     }
 
-    static async find(scheduleId: number|string) {
-        return await new Promise<Proposal[]>((resolve) =>{
-            RestBuilder.setEndpoint(`proposals/schedule-day/${scheduleId}/participant/${AuthService.getParticipant()?.id}`, 'GET')
-                .request()
-                .then(result => {
-                    resolve(result as Proposal[]);
-                });
-        })
-
-       
+    static async find(dayId: number|string, participantId = AuthService.getParticipant()?.id): Promise<Proposal[]> {
+        return RestBuilder.setEndpoint(`proposals/schedule-day/${dayId}/participant/${participantId}`, 'GET')
+            .request() as Promise<Proposal[]>;
     }
 }

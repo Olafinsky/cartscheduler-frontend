@@ -8,6 +8,7 @@ import NoPage from "./components/NoPage";
 import ScheduleDays from "./components/ScheduleDays";
 import ProposalComponent from "./components/ProposalComponent";
 import Home from "./components/Home";
+import ParticipantSelection from "./components/ParticipantSelection";
 
 function App() {
 
@@ -16,6 +17,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
+          <Route path="participants" element={<ParticipantSelection />} />
           <Route path="/login/:token" element={<Home />} />
           <Route path="schedule/:scheduleId" element={<ScheduleDays />} />
           <Route path="schedule/:scheduleId/day/:dayId" element={<ProposalComponent />} />

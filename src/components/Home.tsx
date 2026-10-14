@@ -17,6 +17,7 @@ function Home() {
     let navigate = useNavigate();
 
     const [loginError, setLoginError] = useState<boolean>(false);
+    const [noCandidates, setNoCandidates] = useState(false);
     const [scheduleId, setScheduleId] = useState<number|null>(null);
     const [participants, setParticipants] = useState<Participant[]>([]);
 
@@ -53,7 +54,7 @@ function Home() {
                                         setParticipants(participants);
                                     }
                                     else {
-                                        setLoginError(true);
+                                        setNoCandidates(true);
                                     }
                                 },
                                 error => {
@@ -77,6 +78,7 @@ function Home() {
 
     return <>
         {loginError ? 'Błąd logowania. Nieaktualny link' : ''}
+        {noCandidates && !loginError && <p>Brak kandydatów do wyboru.</p>}
         <ParticipantList participants={participants} selectParticipant={selectParticipant} />
     </>
 }

@@ -121,12 +121,13 @@ describe('Home', () => {
     expect(requestMock).not.toHaveBeenCalled();
   });
 
-  it('pokazuje błąd, gdy harmonogram nie ma uczestników', async () => {
+  it('informuje o braku kandydatów, gdy API zwraca pustą listę', async () => {
     requestMock.mockResolvedValue([]);
 
     renderHome();
 
-    expect(await screen.findByText('Błąd logowania. Nieaktualny link')).toBeInTheDocument();
+    expect(await screen.findByText('Brak kandydatów do wyboru.')).toBeInTheDocument();
+    expect(screen.queryByText('Błąd logowania. Nieaktualny link')).not.toBeInTheDocument();
   });
 
   it('pokazuje błąd, gdy nie uda się pobrać uczestników', async () => {

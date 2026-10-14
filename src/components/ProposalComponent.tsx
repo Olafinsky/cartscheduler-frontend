@@ -37,7 +37,7 @@ function ProposalComponent() {
         <table>
             <thead><tr><th>Czas</th><th>Długość służby</th><th>Przerwa</th><th /></tr></thead>
             <tbody>{proposals.map(item => <tr key={item.id}>
-                <td>{item.hourStart}-{item.hourEnd}</td><td>{item.serviceLengthStart}-{item.serviceLengthEnd}</td>
+                <td>{item.hourStart == null || item.hourEnd == null ? '-' : `${item.hourStart}:00 - ${item.hourEnd + 1}:00`}</td><td>{item.serviceLengthStart}-{item.serviceLengthEnd}</td>
                 <td>{item.breakLengthStart == null ? '-' : `${item.breakLengthStart}-${item.breakLengthEnd}`}</td>
                 <td><button className="btn btn-link p-0" type="button" onClick={() => ProposalService.delete(item.id as number).then(refreshProposals)}>Usuń</button></td>
             </tr>)}</tbody>
