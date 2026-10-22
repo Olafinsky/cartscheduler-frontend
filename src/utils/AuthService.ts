@@ -11,7 +11,11 @@ export class AuthService {
     private static invitationToken: string | null = null;
     private static participantListeners = new Set<() => void>(); 
 
+    private static sessionListeners = new Set<() => void>();
+    private static sessionVersion = 0;
+
     static login(): Promise<RestAuthResponse|null> {
+        const sessionVersion = this.sessionVersion;
         return new Promise((resolve, reject) => {
 
             RestBuilder.setEndpoint('auth/', 'POST')
@@ -21,6 +25,10 @@ export class AuthService {
                 })
                 .then(
                     response => {
+                        if (sessionVersion !== this.sessionVersion) {
+                            reject(new Error("Login superseded by another session"));
+                            return;
+                        }
                         this.setAuthentication(response);
                         resolve(response as RestAuthResponse);
                     },
@@ -48,6 +56,19 @@ export class AuthService {
     static setAuthentication(authentication: RestAuthResponse): void {
         sessionStorage.setItem('authentication', JSON.stringify(authentication));
         this.authentication = authentication;
+        for (const listener of this.sessionListeners) listener();
+    }
+
+    static clearSession(): void {
+        this.sessionVersion++;
+        this.authentication = null;
+        this.participant = null;
+        this.invitationToken = null;
+        sessionStorage.removeItem('authentication');
+        sessionStorage.removeItem('participant');
+        sessionStorage.removeItem('invitation_token');
+        for (const listener of this.participantListeners) listener();
+        for (const listener of this.sessionListeners) listener();
     }
 
     static storeInvitationToken(invitationToken: string): void {
@@ -63,6 +84,7 @@ export class AuthService {
         sessionStorage.setItem('participant', JSON.stringify(participant));
         this.participant = participant;
         for (const listener of this.participantListeners) listener();
+        for (const listener of this.sessionListeners) listener();
     }
 
     static getParticipant(): Participant|null {
@@ -72,6 +94,11 @@ export class AuthService {
     static subscribeParticipant(listener: () => void): () => void {
         this.participantListeners.add(listener);
         return () => this.participantListeners.delete(listener);
+    }
+
+    static subscribeSession(listener: () => void): () => void {
+        this.sessionListeners.add(listener);
+        return () => this.sessionListeners.delete(listener);
     }
 
     private static getJsonFromSession<T>(key: string): T|null {

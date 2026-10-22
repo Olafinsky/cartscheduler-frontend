@@ -27,60 +27,58 @@ function Home() {
     }
 
     useEffect(() => {
-        if (AuthService.isAuthenticated() && AuthService.getParticipant() != null) {
-            navigate(`/schedule/${AuthService.getAuthentication()?.scheduleId}`);
+        let active = true;
+        setLoginError(false);
+        setNoCandidates(false);
+        setScheduleId(null);
+        setParticipants([]);
+
+        if (token == null) {
+            if (AuthService.isAuthenticated() && AuthService.getParticipant() != null) {
+                navigate(`/schedule/${AuthService.getAuthentication()?.scheduleId}`);
+            } else {
+                setLoginError(true);
+            }
+            return;
         }
 
-        if (token != null) {
-            AuthService.storeInvitationToken(token);
-            AuthService.login()
-                .then(
-                    loginRespone => {
-                        if (loginRespone?.scheduleId == null) {
-                            setLoginError(true);
-                            return;
-                        }
-                        setScheduleId(loginRespone.scheduleId);
-                        RestBuilder.setEndpoint('participants/', 'GET')
-                            .request()
-                            .then(
-                                (participantsResponse) => {
-                                    let participants = participantsResponse as Participant[];
-                                    if (participants.length == 1) {
-                                        AuthService.setParticipant(participants[0]);
-                                        navigate(`/schedule/${loginRespone.scheduleId}`);
-                                    }
-                                    else if (participants.length > 1) {
-                                        setParticipants(participants);
-                                    }
-                                    else {
-                                        setNoCandidates(true);
-                                    }
-                                },
-                                error => {
-                                    console.error(error);
-                                    setLoginError(true);
-                                }
-                            )
-                        
-                    },
-                    error => {
-                        console.error(error);
-                        setLoginError(true);
-                    }
-                );
-        }
-        else {
-            setLoginError(true)
-        }
-    }, []);
-    
+        AuthService.clearSession();
+        AuthService.storeInvitationToken(token);
+        const login = async () => {
+            try {
+                const authentication = await AuthService.login();
+                if (!active) return;
+                if (authentication?.scheduleId == null) {
+                    setLoginError(true);
+                    return;
+                }
+                setScheduleId(authentication.scheduleId);
+                const participants = await RestBuilder.setEndpoint('participants/', 'GET').request() as Participant[];
+                if (!active) return;
+                if (participants.length === 1) {
+                    AuthService.setParticipant(participants[0]);
+                    navigate(`/schedule/${authentication.scheduleId}`);
+                } else if (participants.length > 1) {
+                    setParticipants(participants);
+                } else {
+                    setNoCandidates(true);
+                }
+            } catch (error) {
+                if (active) {
+                    console.error(error);
+                    setLoginError(true);
+                }
+            }
+        };
+        void login();
+        return () => { active = false; };
+    }, [token, navigate]);
 
     return <>
         {loginError ? 'Błąd logowania. Nieaktualny link' : ''}
         {noCandidates && !loginError && <p>Brak kandydatów do wyboru.</p>}
         <ParticipantList participants={participants} selectParticipant={selectParticipant} />
-    </>
+    </>;
 }
 
-export default Home
+export default Home;

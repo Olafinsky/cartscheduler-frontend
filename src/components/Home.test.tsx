@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
@@ -45,6 +45,7 @@ describe('Home', () => {
     vi.spyOn(AuthService, 'getAuthentication').mockReturnValue(null);
     vi.spyOn(AuthService, 'storeInvitationToken').mockImplementation(() => undefined);
     vi.spyOn(AuthService, 'setParticipant').mockImplementation(() => undefined);
+    vi.spyOn(AuthService, 'clearSession').mockImplementation(() => undefined);
     vi.spyOn(AuthService, 'login').mockResolvedValue(authentication(42));
 
     vi.spyOn(RestBuilder, 'setEndpoint').mockImplementation(() => ({
@@ -148,4 +149,34 @@ describe('Home', () => {
     expect(await screen.findByTestId('location')).toHaveTextContent('/schedule/7');
     expect(AuthService.login).not.toHaveBeenCalled();
   });
+  it('waits for a new login and participant selection instead of opening the old schedule', async () => {
+    vi.mocked(AuthService.isAuthenticated).mockReturnValue(true);
+    vi.mocked(AuthService.getParticipant).mockReturnValue(participant(99, 'Old'));
+    vi.mocked(AuthService.getAuthentication).mockReturnValue(authentication(7));
+    let resolveLogin!: (value: RestAuthResponse) => void;
+    vi.mocked(AuthService.login).mockReturnValue(new Promise(resolve => { resolveLogin = resolve; }));
+    requestMock.mockResolvedValue([participant(1, 'Anna'), participant(2, 'Jan')]);
+    renderHome();
+    expect(AuthService.clearSession).toHaveBeenCalledOnce();
+    expect(screen.queryByTestId('location')).not.toBeInTheDocument();
+    expect(requestMock).not.toHaveBeenCalled();
+    await act(async () => { resolveLogin(authentication(42)); });
+    expect(await screen.findByText('Anna')).toBeInTheDocument();
+    expect(screen.queryByTestId('location')).not.toBeInTheDocument();
+    expect(AuthService.setParticipant).not.toHaveBeenCalled();
+    await userEvent.click(screen.getByText('Anna'));
+    expect(screen.getByTestId('location')).toHaveTextContent('/schedule/42');
+  });
+
+  it('does not return to the old schedule when the new login fails', async () => {
+    vi.mocked(AuthService.isAuthenticated).mockReturnValue(true);
+    vi.mocked(AuthService.getParticipant).mockReturnValue(participant(99, 'Old'));
+    vi.mocked(AuthService.getAuthentication).mockReturnValue(authentication(7));
+    vi.mocked(AuthService.login).mockRejectedValue(new Error('Unauthorized'));
+    renderHome();
+    expect(await screen.findByText('Błąd logowania. Nieaktualny link')).toBeInTheDocument();
+    expect(AuthService.clearSession).toHaveBeenCalledOnce();
+    expect(screen.queryByTestId('location')).not.toBeInTheDocument();
+  });
+
 });
