@@ -1,3 +1,4 @@
+import ParticipantPicker from "./ParticipantPicker";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Participant } from "../dto/entities/Participant";
@@ -19,7 +20,7 @@ function ParticipantSelection() {
             return;
         }
 
-        RestBuilder.setEndpoint('participants/', 'GET').request()
+        RestBuilder.setEndpoint(`schedules/${scheduleId}/participants/`, 'GET').request()
             .then(result => { if (active) setParticipants(result as Participant[]); })
             .catch(() => { if (active) setError(true); })
             .finally(() => { if (active) setLoading(false); });
@@ -33,15 +34,10 @@ function ParticipantSelection() {
     };
 
     return <>
-        <h1>Wybierz uczestnika</h1>
         {loading && <p role="status">Ładowanie uczestników…</p>}
         {error && <p role="alert">Nie udało się pobrać uczestników. Odśwież stronę lub otwórz ponownie link zaproszenia.</p>}
         {!loading && !error && participants.length === 0 && <p>Brak uczestników do wyboru.</p>}
-        {participants.map(participant => <div key={participant.id}>
-            <button type="button" className="btn btn-link p-0" onClick={() => selectParticipant(participant)}>
-                {participant.name}
-            </button>
-        </div>)}
+        {!loading && !error && scheduleId != null && <ParticipantPicker scheduleId={scheduleId} participants={participants} onSelect={selectParticipant} />}
     </>;
 }
 

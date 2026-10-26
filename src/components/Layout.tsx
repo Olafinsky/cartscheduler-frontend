@@ -26,12 +26,13 @@ function Layout() {
         return <p role="alert">Błąd logowania. Nieaktualny link</p>;
     }
 
-    return <>
-        {participant && <div><Link to="/participants">Zmień uczestnika</Link></div>}
-        <div>{participant ? participant.name : '???'}</div>
-        {participant && scheduleId != null && !isParticipantSelection && <div><Link to={`/schedule/${scheduleId}`}>Wybierz dzień</Link></div>}
-        <Outlet />
-    </>;
+    const isDayView = /^\/schedule\/[^/]+\/day\/[^/]+\/?$/.test(pathname);
+    return <div className="app-shell">
+        <header className="app-header">
+            <div className="app-brand"><span className="app-brand__mark" aria-hidden="true">▦</span><span>Plan służby</span></div>
+            {participant?.name && <div className="session-panel"><div className="session-participant"><span className="eyebrow">Wybrany uczestnik</span><strong>{participant.name}</strong></div><nav aria-label="Nawigacja uczestnika"><Link className="nav-button" to="/participants">Zmień uczestnika</Link>{scheduleId != null && !isParticipantSelection && isDayView && <Link className="nav-button" to={`/schedule/${scheduleId}`}>Wybierz dzień</Link>}</nav></div>}
+        </header>
+        <main className="app-content"><Outlet /></main>
+    </div>;
 }
-
 export default Layout;

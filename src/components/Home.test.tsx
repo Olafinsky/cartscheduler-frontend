@@ -79,7 +79,7 @@ describe('Home', () => {
     expect(screen.getByText('Jan')).toBeInTheDocument();
     expect(AuthService.storeInvitationToken).toHaveBeenCalledWith('invitation-token');
     expect(AuthService.login).toHaveBeenCalledOnce();
-    expect(RestBuilder.setEndpoint).toHaveBeenCalledWith('participants/', 'GET');
+    expect(RestBuilder.setEndpoint).toHaveBeenCalledWith('schedules/42/participants/', 'GET');
   });
 
   it('zapisuje wybranego uczestnika i przechodzi do harmonogramu', async () => {

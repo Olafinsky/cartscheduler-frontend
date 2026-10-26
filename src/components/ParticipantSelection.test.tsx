@@ -40,7 +40,10 @@ it('changes the participant through the header link and returns to the schedule'
     </MemoryRouter>);
 
     await user.click(screen.getByRole('link', { name: 'Zmień uczestnika' }));
-    await user.click(await screen.findByRole('button', { name: 'Jan' }));
+    const janButton = await screen.findByRole('button', { name: 'Jan' });
+    expect(RestBuilder.setEndpoint).toHaveBeenCalledWith('schedules/42/participants/', 'GET');
+    expect(RestBuilder.setEndpoint).toHaveBeenCalledTimes(2);
+    await user.click(janButton);
 
     expect(AuthService.setParticipant).toHaveBeenCalledWith(jan);
     expect(screen.getByRole('heading', { name: 'Grafik' })).toBeInTheDocument();

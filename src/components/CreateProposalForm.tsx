@@ -77,37 +77,41 @@ function CreateProposalForm({ allowAlternativeGroupSelection = false, proposals 
 
     return <form className="proposal-form" onSubmit={submit} aria-label="Dodawanie propozycji">
         <div className="proposal-form__row">
-            <fieldset><legend>Służba w godzinach</legend>
-                <label>OD <select aria-label="Służba od" value={hourStart} onChange={e => changeHourStart(Number(e.target.value))}>{startHours.map(v => <option key={v} value={v}>{v}:00</option>)}</select></label>
-                <label>DO <select aria-label="Służba do" value={hourTo} onChange={e => changeHourTo(Number(e.target.value))}>{endHours.map(v => <option key={v} value={v}>{v}:00</option>)}</select></label>
-            </fieldset>
-            <fieldset><legend>Długość służby</legend>
-                <label>OD <select aria-label="Długość służby od" value={serviceLengthStart} onChange={e => changeServiceStart(Number(e.target.value))}>{range(1, duration).map(v => <option key={v} value={v}>{v}</option>)}</select></label>
-                <label>DO <select aria-label="Długość służby do" value={serviceLengthEnd} onChange={e => changeServiceEnd(Number(e.target.value))}>{range(serviceLengthStart, duration).map(v => <option key={v} value={v}>{v}</option>)}</select></label>
-            </fieldset>
-        </div>
-        {allowAlternativeGroupSelection && <div className="proposal-form__group">
-            <label>Grupa propozycji <input type="text" maxLength={16} size={16} value={alternativeGroup} aria-describedby={groupDescriptionId} onChange={event => setAlternativeGroup(event.target.value)} /></label>
-            <div id={groupDescriptionId}>
-                {group && <p role="status">{groupUsageLoading ? 'Sprawdzanie użycia grupy…' : groupUsageError ? 'Nie udało się sprawdzić użycia grupy. Odśwież stronę, aby spróbować ponownie.' : usedDays.length ? `Grupa została już użyta w dniach: ${usedDays.join(', ')}.` : 'Grupa nie była jeszcze użyta.'}</p>}
-                <p>Z danej grupy zostanie wybrana tylko jedna propozycja</p>
+            <div className="proposal-form__availability-settings">
+                <fieldset><legend>Służba w godzinach</legend>
+                    <label>OD <select aria-label="Służba od" value={hourStart} onChange={e => changeHourStart(Number(e.target.value))}>{startHours.map(v => <option key={v} value={v}>{v}:00</option>)}</select></label>
+                    <label>DO <select aria-label="Służba do" value={hourTo} onChange={e => changeHourTo(Number(e.target.value))}>{endHours.map(v => <option key={v} value={v}>{v}:00</option>)}</select></label>
+                </fieldset>
+                {allowAlternativeGroupSelection && <div className="proposal-form__group">
+                    <label>Grupa propozycji <input type="text" maxLength={16} size={16} value={alternativeGroup} aria-describedby={groupDescriptionId} onChange={event => setAlternativeGroup(event.target.value)} /></label>
+                    <div id={groupDescriptionId}>
+                        {group && <p role="status">{groupUsageLoading ? 'Sprawdzanie użycia grupy…' : groupUsageError ? 'Nie udało się sprawdzić użycia grupy. Odśwież stronę, aby spróbować ponownie.' : usedDays.length ? `Grupa została już użyta w dniach: ${usedDays.join(', ')}.` : 'Grupa nie była jeszcze użyta.'}</p>}
+                        <p>Z danej grupy zostanie wybrana tylko jedna propozycja</p>
+                    </div>
+                </div>}
+                {allowPairSelection && <fieldset><legend>Para</legend>
+                    <label>Uczestnik do pary <select value={pairParticipantId ?? ''} onChange={e => setPairParticipantId(e.target.value === '' ? null : Number(e.target.value))}>
+                        <option value="">Obojętnie</option>
+                        {participants.filter(participant => participant.id != null && participant.id !== participantId).map(participant => <option key={participant.id} value={participant.id}>{participant.name}</option>)}
+                    </select></label>
+                </fieldset>}
             </div>
-        </div>}
-        {allowPairSelection && <fieldset><legend>Para</legend>
-            <label>Uczestnik do pary <select value={pairParticipantId ?? ''} onChange={e => setPairParticipantId(e.target.value === '' ? null : Number(e.target.value))}>
-                <option value="">Obojętnie</option>
-                {participants.filter(participant => participant.id != null && participant.id !== participantId).map(participant => <option key={participant.id} value={participant.id}>{participant.name}</option>)}
-            </select></label>
-        </fieldset>}
-        {canHaveBreak && <fieldset><legend>Przerwa</legend>
-            {([{ value: BreakMode.None, label: 'Bez przerwy' }, { value: BreakMode.Optional, label: 'Obojętnie' }, { value: BreakMode.Required, label: 'Z przerwą' }]).map(({value, label}) => <label key={value}>
-                <input type="radio" name={breakModeName} value={value} checked={breakMode === value} onChange={() => setBreakMode(value)} />{label}
-            </label>)}
-        </fieldset>}
-        {breakMode !== BreakMode.None && canHaveBreak && <fieldset><legend>Długość przerwy</legend>
-            <label>OD <select aria-label="Długość przerwy od" value={breakLengthStart} onChange={e => changeBreakStart(Number(e.target.value))}>{range(1, maxBreakLength).map(v => <option key={v} value={v}>{v}</option>)}</select></label>
-            <label>DO <select aria-label="Długość przerwy do" value={breakLengthEnd} onChange={e => setBreakLengthEnd(Number(e.target.value))}>{range(breakLengthStart, maxBreakLength).map(v => <option key={v} value={v}>{v}</option>)}</select></label>
-        </fieldset>}
+            <div className="proposal-form__service-settings">
+                <fieldset><legend>Długość służby</legend>
+                    <label>OD <select aria-label="Długość służby od" value={serviceLengthStart} onChange={e => changeServiceStart(Number(e.target.value))}>{range(1, duration).map(v => <option key={v} value={v}>{v}</option>)}</select></label>
+                    <label>DO <select aria-label="Długość służby do" value={serviceLengthEnd} onChange={e => changeServiceEnd(Number(e.target.value))}>{range(serviceLengthStart, duration).map(v => <option key={v} value={v}>{v}</option>)}</select></label>
+                </fieldset>
+                {canHaveBreak && <fieldset><legend>Przerwa</legend>
+                    {([{ value: BreakMode.None, label: 'Bez przerwy' }, { value: BreakMode.Optional, label: 'Obojętnie' }, { value: BreakMode.Required, label: 'Z przerwą' }]).map(({value, label}) => <label key={value}>
+                        <input type="radio" name={breakModeName} value={value} checked={breakMode === value} onChange={() => setBreakMode(value)} />{label}
+                    </label>)}
+                </fieldset>}
+                {breakMode !== BreakMode.None && canHaveBreak && <fieldset><legend>Długość przerwy</legend>
+                    <label>OD <select aria-label="Długość przerwy od" value={breakLengthStart} onChange={e => changeBreakStart(Number(e.target.value))}>{range(1, maxBreakLength).map(v => <option key={v} value={v}>{v}</option>)}</select></label>
+                    <label>DO <select aria-label="Długość przerwy do" value={breakLengthEnd} onChange={e => setBreakLengthEnd(Number(e.target.value))}>{range(breakLengthStart, maxBreakLength).map(v => <option key={v} value={v}>{v}</option>)}</select></label>
+                </fieldset>}
+            </div>
+        </div>
         {overlaps && <p role="alert">Wybrane godziny nakładają się na istniejącą propozycję. {allowAlternativeGroupSelection ? 'Wybierz inne godziny lub tę samą grupę propozycji.' : 'Wybierz inne godziny.'}</p>}
         <div className="proposal-form__actions"><button className="btn btn-primary" type="submit" disabled={submitting || overlaps}>Dodaj</button><button className="btn btn-outline-secondary" type="button" onClick={onCancel} disabled={submitting}>Anuluj</button></div>
     </form>;

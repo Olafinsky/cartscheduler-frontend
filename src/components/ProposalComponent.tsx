@@ -65,7 +65,7 @@ function ProposalComponent() {
     const canCreate = scheduleDay.id != null && scheduleDay.firstHour != null && scheduleDay.lastHour != null && participantId != null;
 
     return <>
-        <h1>{scheduleDay.name}</h1>
+        <div className="page-heading"><p className="eyebrow">Propozycje służby</p><h1>{scheduleDay.name}</h1><p>Zaplanuj swoją dostępność na ten dzień.</p></div>
         {!showForm && canCreate && <button className="btn btn-primary proposal-add-button" type="button" onClick={() => setShowForm(true)}>Dodaj propozycję</button>}
         {participantsError && <p role="alert">Nie udało się pobrać uczestników do pary. Odśwież stronę, aby spróbować ponownie.</p>}
         {showForm && canCreate && <CreateProposalForm
@@ -76,15 +76,15 @@ function ProposalComponent() {
             participantId={participantId as number} scheduleDayId={scheduleDay.id as number}
             onCancel={() => setShowForm(false)}
             onSubmit={async request => { await ProposalService.create(request); await refreshProposals(); setShowForm(false); }} />}
-        <table>
-            <thead><tr><th>Czas</th>{allowAlternativeGroupSelection && <th>Grupa propozycji</th>}<th>Długość służby</th><th>Przerwa</th>{allowPairSelection && <th>Uczestnik do pary</th>}<th /></tr></thead>
+        <div className="proposal-table-wrapper"><table className="proposal-table">
+            <thead><tr><th>Godziny</th><th>Długość służby</th><th>Przerwa</th>{allowPairSelection && <th>Uczestnik do pary</th>}{allowAlternativeGroupSelection && <th>Grupa propozycji</th>}<th><span className="visually-hidden">Akcje</span></th></tr></thead>
             <tbody>{proposals.map(item => <tr key={item.id}>
-                <td>{item.hourStart == null || item.hourEnd == null ? '-' : `${item.hourStart}:00 - ${item.hourEnd + 1}:00`}</td>{allowAlternativeGroupSelection && <td>{item.alternativeGroup || '-'}</td>}<td>{item.serviceLengthStart}-{item.serviceLengthEnd}</td>
+                <td>{item.hourStart == null || item.hourEnd == null ? '-' : `${item.hourStart}:00 - ${item.hourEnd + 1}:00`}</td><td>{item.serviceLengthStart}-{item.serviceLengthEnd}</td>
                 <td>{item.breakMode === BreakMode.None ? 'Bez przerwy' : item.breakMode === BreakMode.Required ? 'Z przerwą' : item.breakMode === BreakMode.Optional ? 'Obojętnie' : '-'}{item.breakMode !== BreakMode.None && item.breakLengthStart != null && ` (${item.breakLengthStart}-${item.breakLengthEnd})`}</td>
                 {allowPairSelection && <td>{item.pairParticipantId == null ? 'Obojętnie' : participants.find(participant => participant.id === item.pairParticipantId)?.name ?? `Uczestnik #${item.pairParticipantId}`}</td>}
-                <td><button className="btn btn-link p-0" type="button" onClick={() => ProposalService.delete(item.id as number).then(refreshProposals)}>Usuń</button></td>
+                {allowAlternativeGroupSelection && <td>{item.alternativeGroup || '-'}</td>}<td><button className="delete-button" aria-label="Usuń propozycję" title="Usuń propozycję" type="button" onClick={() => ProposalService.delete(item.id as number).then(refreshProposals)}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6" /></svg></button></td>
             </tr>)}</tbody>
-        </table>
+        </table></div>{proposals.length === 0 && !showForm && <p className="empty-state">Nie masz jeszcze propozycji na ten dzień. Dodaj pierwszą propozycję, aby wskazać swoją dostępność.</p>}
     </>;
 }
 
