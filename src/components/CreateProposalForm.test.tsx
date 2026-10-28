@@ -33,7 +33,7 @@ describe('CreateProposalForm', () => {
         await userEvent.selectOptions(screen.getByLabelText('Długość służby do'), '3');
         await userEvent.click(screen.getByLabelText('Z przerwą'));
         expect(screen.getByLabelText('Długość przerwy od')).toBeInTheDocument();
-        expect(Array.from((screen.getByLabelText('Długość przerwy do') as HTMLSelectElement).options).map(o => o.value)).toEqual(['1']);
+        expect(Array.from((screen.getByLabelText('Długość przerwy do') as HTMLSelectElement).options).map(o => o.value)).toEqual(['1','2']);
         await userEvent.selectOptions(screen.getByLabelText('Długość służby do'), '1');
         expect(screen.queryByRole('group', { name: 'Przerwa' })).not.toBeInTheDocument();
     });
@@ -104,14 +104,14 @@ it('allows long breaks in a wide time window and normalizes changed limits', asy
     expect(screen.queryByRole('group', {name: 'Przerwa'})).not.toBeInTheDocument();
     await userEvent.selectOptions(screen.getByLabelText('Długość służby do'), '2');
     await userEvent.click(screen.getByRole('radio', {name: 'Z przerwą'}));
-    expect(Array.from((screen.getByLabelText('Długość przerwy do') as HTMLSelectElement).options).map(o => o.value)).toEqual(['1','2','3','4','5','6','7','8','9']);
+    expect(Array.from((screen.getByLabelText('Długość przerwy do') as HTMLSelectElement).options).map(o => o.value)).toEqual(['1','2','3','4','5','6','7','8','9','10']);
     await userEvent.selectOptions(screen.getByLabelText('Długość przerwy od'), '4');
     await userEvent.selectOptions(screen.getByLabelText('Długość przerwy do'), '9');
     await userEvent.click(screen.getByRole('button', {name: 'Dodaj'}));
     expect(onSubmit).toHaveBeenLastCalledWith(expect.objectContaining({breakMode: 1, breakLengthStart: 4, breakLengthEnd: 9}));
     await userEvent.selectOptions(screen.getByLabelText('Służba do'), '10');
-    expect(screen.getByLabelText('Długość przerwy od')).toHaveValue('1');
-    expect(screen.getByLabelText('Długość przerwy do')).toHaveValue('1');
+    expect(screen.getByLabelText('Długość przerwy od')).toHaveValue('2');
+    expect(screen.getByLabelText('Długość przerwy do')).toHaveValue('2');
     await userEvent.selectOptions(screen.getByLabelText('Długość służby od'), '2');
     expect(screen.getByLabelText('Długość przerwy od')).toHaveValue('1');
     expect(screen.getByLabelText('Długość przerwy do')).toHaveValue('1');
@@ -198,5 +198,5 @@ it('removes a selected break when only the last two hours remain and resets its 
     await userEvent.selectOptions(screen.getByLabelText('Służba od'), '15');
     expect(screen.getByRole('radio', {name: 'Bez przerwy'})).toBeChecked();
     await userEvent.click(screen.getByRole('radio', {name: 'Z przerwą'}));
-    expect(Array.from((screen.getByLabelText('Długość przerwy do') as HTMLSelectElement).options).map(o => o.value)).toEqual(['1']);
+    expect(Array.from((screen.getByLabelText('Długość przerwy do') as HTMLSelectElement).options).map(o => o.value)).toEqual(['1','2']);
 });

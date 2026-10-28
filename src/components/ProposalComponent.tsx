@@ -7,6 +7,7 @@ import { ProposalService } from "../utils/ProposalService";
 import { RestBuilder } from "../utils/RestBuilder";
 import { Participant } from "../dto/entities/Participant";
 import { BreakMode } from "../dto/entities/BreakMode";
+import { ProposalPrefill } from "../dto/entities/ProposalPrefill";
 import CreateProposalForm from "./CreateProposalForm";
 
 function ProposalComponent() {
@@ -21,6 +22,8 @@ function ProposalComponent() {
     const [groupUsage, setGroupUsage] = useState<{ dayName: string; alternativeGroup?: string | null }[]>([]);
     const [groupUsageLoading, setGroupUsageLoading] = useState(false);
     const [groupUsageError, setGroupUsageError] = useState(false);
+    const [prefill, setPrefill] = useState<ProposalPrefill | null>(null);
+    const [prefillError, setPrefillError] = useState(false);
     const [showForm, setShowForm] = useState(false);
     const { dayId, scheduleId } = useParams();
     const refreshProposals = useCallback(
@@ -62,6 +65,17 @@ function ProposalComponent() {
     }, [allowAlternativeGroupSelection, showForm, scheduleId, dayId]);
 
     const participantId = AuthService.getParticipant()?.id;
+    useEffect(() => {
+        setPrefill(null);
+        setPrefillError(false);
+        if (dayId == null || participantId == null) return;
+        let active = true;
+        ProposalService.prefill(dayId, participantId)
+            .then(result => { if (active) setPrefill(result); })
+            .catch(() => { if (active) setPrefillError(true); });
+        return () => { active = false; };
+    }, [showForm, dayId, participantId, proposals]);
+
     const canCreate = scheduleDay.id != null && scheduleDay.firstHour != null && scheduleDay.lastHour != null && participantId != null;
 
     return <>
@@ -69,6 +83,7 @@ function ProposalComponent() {
         {!showForm && canCreate && <button className="btn btn-primary proposal-add-button" type="button" onClick={() => setShowForm(true)}>Dodaj propozycję</button>}
         {participantsError && <p role="alert">Nie udało się pobrać uczestników do pary. Odśwież stronę, aby spróbować ponownie.</p>}
         {showForm && canCreate && <CreateProposalForm
+            key={dayId + ":" + participantId} prefill={prefill} prefillError={prefillError}
             allowAlternativeGroupSelection={allowAlternativeGroupSelection} proposals={proposals}
             groupUsage={groupUsage} groupUsageLoading={groupUsageLoading} groupUsageError={groupUsageError}
             allowPairSelection={allowPairSelection} participants={participants}

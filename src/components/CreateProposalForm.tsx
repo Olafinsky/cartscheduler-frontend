@@ -4,10 +4,12 @@ import { BreakMode } from "../dto/entities/BreakMode";
 import { Proposal } from "../dto/entities/Proposal";
 import { Participant } from "../dto/entities/Participant";
 
-type Props = { allowAlternativeGroupSelection?: boolean; proposals?: Proposal[]; groupUsage?: { dayName: string; alternativeGroup?: string | null }[]; groupUsageLoading?: boolean; groupUsageError?: boolean; allowPairSelection?: boolean; participants?: Participant[]; firstHour: number; lastHour: number; participantId: number; scheduleDayId: number; onCancel: () => void; onSubmit: (request: CreateProposalRequest) => Promise<void> };
+import { ProposalPrefill, prefillDayLabels } from "../dto/entities/ProposalPrefill";
+
+type Props = { prefill?: ProposalPrefill | null; prefillError?: boolean; allowAlternativeGroupSelection?: boolean; proposals?: Proposal[]; groupUsage?: { dayName: string; alternativeGroup?: string | null }[]; groupUsageLoading?: boolean; groupUsageError?: boolean; allowPairSelection?: boolean; participants?: Participant[]; firstHour: number; lastHour: number; participantId: number; scheduleDayId: number; onCancel: () => void; onSubmit: (request: CreateProposalRequest) => Promise<void> };
 const range = (from: number, to: number) => Array.from({ length: Math.max(0, to - from + 1) }, (_, index) => from + index);
 
-function CreateProposalForm({ allowAlternativeGroupSelection = false, proposals = [], groupUsage = [], groupUsageLoading = false, groupUsageError = false, allowPairSelection = false, participants = [], firstHour, lastHour, participantId, scheduleDayId, onCancel, onSubmit }: Props) {
+function CreateProposalForm({ prefill = null, prefillError = false, allowAlternativeGroupSelection = false, proposals = [], groupUsage = [], groupUsageLoading = false, groupUsageError = false, allowPairSelection = false, participants = [], firstHour, lastHour, participantId, scheduleDayId, onCancel, onSubmit }: Props) {
     const [alternativeGroup, setAlternativeGroup] = useState('');
     const group = allowAlternativeGroupSelection ? alternativeGroup.trim() || null : null;
     const groupDescriptionId = useId();
@@ -26,14 +28,28 @@ function CreateProposalForm({ allowAlternativeGroupSelection = false, proposals 
     const overlaps = proposals.some(proposal => proposal.hourStart != null && proposal.hourEnd != null
         && hourStart <= proposal.hourEnd && hourTo > proposal.hourStart
         && !(group && proposal.alternativeGroup?.trim() === group));
-    const maxBreakLength = duration - Math.max(2, serviceLengthStart);
-    const canHaveBreak = serviceLengthEnd > 1 && maxBreakLength >= 1;
+    const maxBreakLength = duration - serviceLengthStart;
+    const canHaveBreak = duration >= 3 && serviceLengthEnd > 1 && maxBreakLength >= 1;
     const startHours = useMemo(() => range(firstHour, lastHour), [firstHour, lastHour]);
     const endHours = useMemo(() => range(hourStart + 1, lastHour + 1), [hourStart, lastHour]);
 
+    const loadPrefill = () => {
+        if (!prefill?.available) return;
+        const values = prefill.values;
+        setHourStart(values.hourStart);
+        setHourTo(values.hourEnd + 1);
+        setServiceLengthStart(values.serviceLengthStart);
+        setServiceLengthEnd(values.serviceLengthEnd);
+        setBreakMode(values.breakMode);
+        setBreakLengthStart(values.breakLengthStart ?? 1);
+        setBreakLengthEnd(values.breakLengthEnd ?? 1);
+        setAlternativeGroup(allowAlternativeGroupSelection ? values.alternativeGroup ?? '' : '');
+        setPairParticipantId(allowPairSelection ? values.pairParticipantId : null);
+    };
+
     const normalizeBreakLengths = (nextDuration: number, nextServiceStart: number, nextServiceEnd: number) => {
-        const nextMaxBreak = nextDuration - Math.max(2, nextServiceStart);
-        if (nextServiceEnd <= 1 || nextMaxBreak < 1) setBreakMode(BreakMode.None);
+        const nextMaxBreak = nextDuration - nextServiceStart;
+        if (nextDuration < 3 || nextServiceEnd <= 1 || nextMaxBreak < 1) setBreakMode(BreakMode.None);
         setBreakLengthStart(Math.min(breakLengthStart, Math.max(1, nextMaxBreak)));
         setBreakLengthEnd(Math.min(breakLengthEnd, Math.max(1, nextMaxBreak)));
     };
@@ -76,6 +92,12 @@ function CreateProposalForm({ allowAlternativeGroupSelection = false, proposals 
     };
 
     return <form className="proposal-form" onSubmit={submit} aria-label="Dodawanie propozycji">
+        {prefill?.available && prefillDayLabels[prefill.source.dayOfWeek] && <div className="proposal-form__prefill">
+            <button className="btn btn-outline-secondary" type="button" disabled={submitting} onClick={loadPrefill}>
+                Załaduj z {prefillDayLabels[prefill.source.dayOfWeek]}
+            </button>
+        </div>}
+        {prefillError && <p role="alert">Nie udało się pobrać poprzedniej propozycji. Możesz uzupełnić formularz ręcznie lub otworzyć go ponownie.</p>}
         <div className="proposal-form__row">
             <div className="proposal-form__availability-settings">
                 <fieldset><legend>Służba w godzinach</legend>
